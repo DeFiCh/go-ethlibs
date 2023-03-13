@@ -23,5 +23,5 @@ jobs:
           
       - name: Run rpc tests
         run: |
-          ETHLIBS_TEST_GOERLI_WS_URL=wss://goerli.infura.io/ws/v3/9aa3d95b3bc440fa88ea12eaa4456161 go test -v ./node/goerli_test.go
+          ETHLIBS_TEST_WS_URL=wss://goerli.infura.io/ws/v3/9aa3d95b3bc440fa88ea12eaa4456161 go test -v ./node/rpc_test.go
 
