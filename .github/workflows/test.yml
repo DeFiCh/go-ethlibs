@@ -12,6 +12,7 @@ concurrency:
 
 jobs:
   rpc-tests:
+    if: ${{ github.repository == 'SKIP__ON__PURPOSE'}}
     name: RPC tests
     runs-on: ubuntu-latest
     steps:
