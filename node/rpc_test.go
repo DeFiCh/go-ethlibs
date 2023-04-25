@@ -15,29 +15,41 @@ import (
 )
 
 func getClient(t *testing.T, ctx context.Context) node.Client {
-	base_url := os.Getenv("ETHLIBS_TEST_URL")
+
+    // Save base URL. Fail if not set.
+	base_url := os.Getenv("NODE_URL")
 	if base_url == "" {
-		t.Skip("ETHLIBS_TEST_URL not set, skipping test. Set to a valid http/ws URL to execute this test.")
+		t.Skip("NODE_URL not set, skipping test.")
 	}
+
+    // If AUTH_ID is not set, return connection without Basic Auth header
 	auth_id := os.Getenv("AUTH_ID")
-	if auth_id == "" {
-		t.Skip("AUTH_ID not set, skipping test.")
-	}
-	url := fmt.Sprintf("%s%s", base_url, auth_id)
+    if auth_id == "" {
+        conn, err := node.NewClient(ctx, base_url, http.Header{})
+        require.NoError(t, err, "creating websocket connection should not fail")
+        return conn
+    }
 
-	auth_pass := os.Getenv("AUTH_PASS")
-	if auth_pass == "" {
-		t.Skip("AUTH_PASS not set, skipping test.")
-	}
+    // If AUTH_ID is present then check AUTH_PASS and create Basic Auth http header
+    // This is ment for INFURA test nodes to work in a secure way
+    auth_pass := os.Getenv("AUTH_PASS")
+    if auth_pass == "" {
+        t.Skip("AUTH_PASS not set, skipping test.")
+    }
 
-	base64Header := ob64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", auth_id, auth_pass)))
+    // format URL -> base_url/auth_id
+    url := fmt.Sprintf("%s%s", base_url, auth_id)
 
-	header := http.Header{
-		"Authorization": {fmt.Sprintf("Basic %s", base64Header)},
-	}
-	conn, err := node.NewClient(ctx, url, header)
-	require.NoError(t, err, "creating websocket connection should not fail")
-	return conn
+    // Create Basic Auth token base64(id:pass) for http header
+    base64Header := ob64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", auth_id, auth_pass)))
+    header := http.Header{
+        "Authorization": {fmt.Sprintf("Basic %s", base64Header)},
+    }
+
+    // Create connection
+    conn, err := node.NewClient(ctx, url, header)
+    require.NoError(t, err, "creating websocket connection should not fail")
+    return conn
 }
 
 func TestConnection_Call_Simple_Contract(t *testing.T) {
