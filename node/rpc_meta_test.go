@@ -22,27 +22,32 @@ func getMetaDevClient(t *testing.T, ctx context.Context) node.Client {
 	return conn
 }
 
+// Error(): json: cannot unmarshal array into Go struct field block.extraData of type string
 func TestMetaRpc_Block_GetBlockByNumber(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
 
 	blockNumber, err := conn.BlockNumber(ctx)
-	println("blockNumber: ", blockNumber)
 	require.NoError(t, err)
 
 	next, err := conn.BlockByNumber(ctx, blockNumber+1000, false)
-	println("next: ", next)
 	require.Nil(t, next, "future block should be nil")
 	require.Error(t, err, "requesting a future block should return an error")
 	require.Equal(t, node.ErrBlockNotFound, err)
 
+	block, err := conn.BlockByNumber(ctx, blockNumber, true)
+	println("block: ", block, err)
+	require.NoError(t, err, "getBlockByNumber(n) should not fail")
+
+	// NOTE(canonbrother): getBlockByNumber(0) -> null
 	// get a the genesis block by number which should _not_ fail
-	genesis, err := conn.BlockByNumber(ctx, 0, false)
-	println("genesis: ", genesis, err)
+	// genesis, err := conn.BlockByNumber(ctx, 0, false)
+	// println("genesis: ", genesis, err)
 	// require.NoError(t, err, "requesting genesis block by number should not fail")
 	// require.NotNil(t, genesis, "genesis block must not be nil")
 }
 
+// Error(): json: cannot unmarshal array into Go struct field block.extraData of type string
 func TestMetaRpc_Block_GetBlockByHash(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
@@ -60,11 +65,9 @@ func TestMetaRpc_Block_GetBlockByHash(t *testing.T) {
 	require.Nil(t, b, "block from non-existent hash should be nil")
 	require.Equal(t, node.ErrBlockNotFound, err)
 
-	// get the genesis block which should _not_ fail
-	b, err = conn.BlockByHash(ctx, "0xefe301c7379b30bcbe193cf82c90c9a30aaa42357fdaa62bfd718ce2e0447891", true)
-	println("b: ", b, err)
-	// require.NoError(t, err, "genesis block hash should not return an error")
-	// require.NotNil(t, b, "genesis block should be retrievable by hash")
+	b, err = conn.BlockByHash(ctx, "0xdf56ed05bbce1d138c4445e74a8b407c7d962fa7a20190c2700811f5fdc07d53", true)
+	require.NoError(t, err, "getBlockByHash(h) should not fail")
+	require.NotNil(t, b, "genesis block should be retrievable by hash")
 }
 
 func TestMetaRpc_Client_Accounts(t *testing.T) {
@@ -155,7 +158,6 @@ func TestMetaRpc_Execute_Call(t *testing.T) {
 	require.Equal(t, hash, "0x0000000000000000000000000000000000000000000000000000000000000006")
 }
 
-// ERROR(): method not found
 func TestMetaRpc_Execute_EstimateGas(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
@@ -175,22 +177,21 @@ func TestMetaRpc_Execute_EstimateGas(t *testing.T) {
 	require.NotEqual(t, gas, 0, "estimate gas cannot be equal to zero.")
 }
 
-// ERROR(): could not decode result
+// ERROR(): not ready yet
 func TestMetaRpc_Fee_MaxPriorityFeePerGas(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
 
 	fee, err := conn.MaxPriorityFeePerGas(ctx)
-	println("fee: ", fee)
 	require.NoError(t, err)
-	// require.NotEqual(t, fee, 0, "fee cannot be equal to 0")
+	require.NotEqual(t, fee, 0, "fee cannot be equal to 0")
 }
 
 func TestMetaRpc_Fee_GasPrice(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
 
-	gasPrice, err := conn.GasPrice(ctx)
+	gasPrice, err := conn.GasPrice(ctx) // 10_000_000_000
 	require.NoError(t, err)
 	require.NotEqual(t, gasPrice, 0, "gas price cannot be equal to 0")
 }
@@ -204,23 +205,23 @@ func TestMetaRpc_State_GetBalance(t *testing.T) {
 	require.NotNil(t, bal)
 }
 
-// ERROR(): method not found
 func TestMetaRpc_State_GetTransactionCount(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
 
-	// Checks the current pending nonce for account can be retrieved
-	blockNum1 := eth.MustBlockNumberOrTag("latest")
-	count, err := conn.GetTransactionCount(ctx, ALICE, *blockNum1)
-	println("count: ", count)
+	blockNum := eth.MustBlockNumberOrTag("latest")
+	count, err := conn.GetTransactionCount(ctx, ALICE, *blockNum)
 	require.NoError(t, err)
-	require.NotEmpty(t, count, "pending nonce must not be nil")
+	require.NotEmpty(t, count, "must not be nil")
 
+	// NOTE(canonbrother): return latest nonce of account, no latest block checked
 	// Should catch failure since it is looking for a nonce of a future block
-	// blockNum2 := eth.MustBlockNumberOrTag("0x7654321")
-	// pendingNonce2, err := conn.GetTransactionCount(ctx, "0xed28874e52A12f0D42118653B0FBCee0ACFadC00", *blockNum2)
+	// blockNum := eth.MustBlockNumberOrTag("0x7654321")
+	// count, err := conn.GetTransactionCount(ctx, ALICE, *blockNum)
 	// require.Error(t, err)
-	// require.Empty(t, pendingNonce2, "pending nonce must not exist since it is a future block")
+	// require.Empty(t, count, "must not exist since it is a future block")
+
+	println("TestMetaRpc_State_GetTransactionCount")
 }
 
 func TestMetaRpc_Submit_SendRawTransactionInValidEmpty(t *testing.T) {
