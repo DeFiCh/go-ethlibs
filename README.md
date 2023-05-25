@@ -17,6 +17,18 @@ eventually graduate into stand-alone packages.
 - `node`: A proto-ethclient in the `node` namespace
 - `rlp`: Independent implementation of RLP parsing
 
+## Compile
+
+https://geth.ethereum.org/docs/tools/abigen
+
+```sh
+# generate abi
+solc --abi ./contracts/Counter.sol -o gen
+# generate bytecode
+solc --bin ./contracts/Counter.sol -o ./gen/Counter.bin 
+# gen binding files
+abigen --abi ./gen/Counter.abi --pkg gen --type Counter --out Counter.go
+```
 
 ## License
 
