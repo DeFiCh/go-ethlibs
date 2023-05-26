@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   rpc-goerli-test:
-    name: Unit tests
+    name: Goerli
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v3
@@ -23,7 +23,7 @@ jobs:
         run: go test -v ./node/rpc_test.go
 
   rpc-meta-test:
-    name: Unit tests
+    name: Meta Devnet
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v3
