@@ -1,6 +1,7 @@
 package node_test
 
 import (
+	"os"
 	"context"
 	"net/http"
 	"testing"
@@ -14,7 +15,10 @@ import (
 const ALICE = "0x4b73AFe4BDba1Ef40025D9002da78ca6a09d56b5"
 
 func getMetaDevClient(t *testing.T, ctx context.Context) node.Client {
-	url := "http://35.187.53.161:20551/"
+	url, isSet := os.LookupEnv("NODE_URL")
+	if !isSet {
+		url = "http://35.187.53.161:20551/"
+	}
 
 	// Create connection
 	conn, err := node.NewClient(ctx, url, http.Header{})
