@@ -2,10 +2,7 @@ package node_test
 
 import (
 	"context"
-	ob64 "encoding/base64"
-	"fmt"
 	"net/http"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,40 +12,10 @@ import (
 )
 
 func getClient(t *testing.T, ctx context.Context) node.Client {
-
-	// Save base URL. Fail if not set.
-	// NODE_URL must end with trailing '/' i.e http://url:port/
-	base_url := os.Getenv("NODE_URL")
-	if base_url == "" {
-		t.Skip("NODE_URL not set, skipping test.")
-	}
-
-	// If AUTH_ID is not set, return connection without Basic Auth header
-	auth_id := os.Getenv("AUTH_ID")
-	if auth_id == "" {
-		conn, err := node.NewClient(ctx, base_url, http.Header{})
-		require.NoError(t, err, "creating websocket connection should not fail")
-		return conn
-	}
-
-	// If AUTH_ID is present then check AUTH_PASS and create Basic Auth http header
-	// This is ment for INFURA test nodes to work in a secure way
-	auth_pass := os.Getenv("AUTH_PASS")
-	if auth_pass == "" {
-		t.Skip("AUTH_PASS not set, skipping test.")
-	}
-
-	// format URL -> base_url/auth_id
-	url := fmt.Sprintf("%s%s", base_url, auth_id)
-
-	// Create Basic Auth token base64(id:pass) for http header
-	base64Header := ob64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", auth_id, auth_pass)))
-	header := http.Header{
-		"Authorization": {fmt.Sprintf("Basic %s", base64Header)},
-	}
+	url := "https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
 
 	// Create connection
-	conn, err := node.NewClient(ctx, url, header)
+	conn, err := node.NewClient(ctx, url, http.Header{})
 	require.NoError(t, err, "creating websocket connection should not fail")
 	return conn
 }
@@ -173,7 +140,7 @@ func TestConnection_SendRawTransactionInValidOldNonce(t *testing.T) {
 	ctx := context.Background()
 	conn := getClient(t, ctx)
 
-	data := eth.MustData("0xf86e0185174876e8008252089460c063d3f3b744e2d153fcbe66a068b09109cf1b865af3107a400084baadf00d2ea0b4d9e2edbd2a2d9a38cf0415f9d03849e6a6f2de8562d7cd74eda89397882030a056edb455e9ffa07ad22f8b06f9065564911f796a026e1b2177ecaad995198aaa")
+	data := eth.MustData("0xf90150808522ecb25c008307a1208080b8fe608060405234801561001057600080fd5b5060df8061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063165c4a1614602d575b600080fd5b603c6038366004605f565b604e565b60405190815260200160405180910390f35b600060588284607f565b9392505050565b600080604083850312156070578182fd5b50508035926020909101359150565b600081600019048311821515161560a457634e487b7160e01b81526011600452602481fd5b50029056fea2646970667358221220223df7833fd08eb1cd3ce363a9c4cb4619c1068a5f5517ea8bb862ed45d994f764736f6c634300080200331ca02096ae58676338a357356c57ed96c6b33573fdf6ac47a575b641a53f198d4f09a02bb1989de4389734be188af15329b3177ca9f1f766020bd11225bc46e242947d")
 	txHash, err := conn.SendRawTransaction(ctx, data.String())
 	require.Error(t, err)
 	require.Equal(t, err.Error(), "{\"code\":-32000,\"message\":\"nonce too low\"}")
