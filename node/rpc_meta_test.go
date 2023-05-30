@@ -95,7 +95,7 @@ func TestMetaRpc_Client_NetVersion(t *testing.T) {
 	netVersion, err := conn.NetVersion(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, netVersion, "net version id must not be nil")
-	require.Equal(t, netVersion, "1132")
+	require.Equal(t, netVersion, "1133")
 }
 
 func TestMetaRpc_Client_ChainId(t *testing.T) {
@@ -105,7 +105,7 @@ func TestMetaRpc_Client_ChainId(t *testing.T) {
 	chainId, err := conn.ChainId(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, chainId, "chain id must not be nil")
-	require.Equal(t, chainId, "0x46c") // 1132
+	require.Equal(t, chainId, "0x46d") // 1133
 }
 
 // ERROR(): data type size mismatch, expected 32 got 0
