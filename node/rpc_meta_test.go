@@ -13,6 +13,7 @@ import (
 )
 
 const ALICE = "0x9b8a4af42140d8a4c153a822f02571a1dd037e89"
+const BOB = "0x6C34CBb9219d8cAa428835D2073E8ec88BA0a110"
 
 func getMetaDevClient(t *testing.T, ctx context.Context) node.Client {
 	url, isSet := os.LookupEnv("NODE_URL")
@@ -69,11 +70,12 @@ func TestMetaRpc_Block_GetBlockByHash(t *testing.T) {
 
 	// dynamically get the block
 	blockNumber, _ := conn.BlockNumber(ctx)
-	block, _ := conn.BlockByNumber(ctx, blockNumber, true)
+	block, err := conn.BlockByNumber(ctx, blockNumber, true)
+	require.NoError(t, err, "getBlockByNumber should be no error")
 	hash := block.Hash.Hash().String()
 	b, err = conn.BlockByHash(ctx, hash, true)
-	require.NoError(t, err, "getBlockByHash(h) should not fail")
-	require.NotNil(t, b, "genesis block should be retrievable by hash")
+	require.NoError(t, err, "getBlockByHash should not fail")
+	require.NotNil(t, b, "block should be retrievable by hash")
 }
 
 func TestMetaRpc_Client_Accounts(t *testing.T) {
@@ -82,7 +84,8 @@ func TestMetaRpc_Client_Accounts(t *testing.T) {
 
 	accountList, err := conn.GetAccounts(ctx)
 	require.NoError(t, err)
-	require.Equal(t, accountList[0], eth.Address(ALICE))
+	require.Equal(t, accountList[0], eth.Address(BOB))
+	require.Equal(t, accountList[1], eth.Address(ALICE))
 }
 
 func TestMetaRpc_Client_NetVersion(t *testing.T) {
@@ -92,7 +95,7 @@ func TestMetaRpc_Client_NetVersion(t *testing.T) {
 	netVersion, err := conn.NetVersion(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, netVersion, "net version id must not be nil")
-	require.Equal(t, netVersion, "1132")
+	require.Equal(t, netVersion, "1133")
 }
 
 func TestMetaRpc_Client_ChainId(t *testing.T) {
@@ -102,7 +105,7 @@ func TestMetaRpc_Client_ChainId(t *testing.T) {
 	chainId, err := conn.ChainId(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, chainId, "chain id must not be nil")
-	require.Equal(t, chainId, "0x46c") // 1132
+	require.Equal(t, chainId, "0x46d") // 1133
 }
 
 // ERROR(): data type size mismatch, expected 32 got 0
@@ -152,7 +155,7 @@ func TestMetaRpc_Execute_Call(t *testing.T) {
 		// 		return block.gaslimit;
 		// 	}
 		// }
-		To:    eth.MustAddress("0x42c9b572462475aa7d2c888fb3614f045df3a1db"), // contract address
+		To:    eth.MustAddress("0xdb5f0cafdcf523f4ec71a24757c096c5e84058e25c0c22bae343c199692fc6ca"), // contract address
 		Value: *eth.MustQuantity("0x00"),
 		// mul(2,3)
 		Input: *eth.MustData("0xc8a4ac9c00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003"),
@@ -183,7 +186,7 @@ func TestMetaRpc_Execute_EstimateGas(t *testing.T) {
 	require.NotEqual(t, gas, 0, "estimate gas cannot be equal to zero.")
 }
 
-// IGNORE(): not ready yet
+// IGNORE(): rpc is not ready yet
 // func TestMetaRpc_Fee_MaxPriorityFeePerGas(t *testing.T) {
 // 	ctx := context.Background()
 // 	conn := getMetaDevClient(t, ctx)
@@ -211,6 +214,8 @@ func TestMetaRpc_State_GetBalance(t *testing.T) {
 	require.NotNil(t, bal)
 }
 
+// ERROR(): Should NOT be empty, but was 0
+// check internally
 func TestMetaRpc_State_GetTransactionCount(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
@@ -252,6 +257,16 @@ func TestMetaRpc_Submit_SendRawTransactionInValidEmpty(t *testing.T) {
 // 	require.Empty(t, txHash, "txHash must be nil")
 // }
 
+func TestMetaRpc_Submit_SendRawTransaction(t *testing.T) {
+	ctx := context.Background()
+	conn := getMetaDevClient(t, ctx)
+
+	data := eth.MustData("0x02f9015c8080852363e7f0008522ecb25c00870aa87bee5380008080b8fe608060405234801561001057600080fd5b5060df8061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063165c4a1614602d575b600080fd5b603c6038366004605f565b604e565b60405190815260200160405180910390f35b600060588284607f565b9392505050565b600080604083850312156070578182fd5b50508035926020909101359150565b600081600019048311821515161560a457634e487b7160e01b81526011600452602481fd5b50029056fea2646970667358221220223df7833fd08eb1cd3ce363a9c4cb4619c1068a5f5517ea8bb862ed45d994f764736f6c63430008020033c080a048cbbd708f4f0db5f6232f1404cea1c5b305138038866de624d37f82d7477b95a063ef66a0dc703e98f6224110ea0917f29acd384038b3b2e731445316abfbc7e8")
+	txHash, err := conn.SendRawTransaction(ctx, data.String())
+	require.NoError(t, err, "sendRawTransaction should be no error")
+	require.NotNil(t, txHash, "sendRawTransaction should not be null")
+}
+
 func TestMetaRpc_Transaction_GetTransactionByHash(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
@@ -269,7 +284,8 @@ func TestMetaRpc_Transaction_GetTransactionByHash(t *testing.T) {
 	require.Nil(t, tx, "tx from non-existent hash should be nil")
 	require.Equal(t, node.ErrTransactionNotFound, err)
 
-	tx, err = conn.TransactionByHash(ctx, "0xb0d129c0d84eef2db189f268d6510a3b24e51822c48e1a810fbd367ef8c1028c")
-	require.NoError(t, err, "early tx should not return an error")
-	require.NotNil(t, tx, "early tx should be retrievable by hash")
+	// IGNORE(): can't pre-obtain tx hash yet
+	// tx, err = conn.TransactionByHash(ctx, "0xb0d129c0d84eef2db189f268d6510a3b24e51822c48e1a810fbd367ef8c1028c")
+	// require.NoError(t, err, "early tx should not return an error")
+	// require.NotNil(t, tx, "early tx should be retrievable by hash")
 }
