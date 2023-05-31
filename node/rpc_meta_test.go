@@ -155,7 +155,7 @@ func TestMetaRpc_Execute_Call(t *testing.T) {
 		// 		return block.gaslimit;
 		// 	}
 		// }
-		To:    eth.MustAddress("0xdb5f0cafdcf523f4ec71a24757c096c5e84058e25c0c22bae343c199692fc6ca"), // contract address
+		To:    eth.MustAddress("0x966aaec51a95a737d086d21f015a6991dd5559ae"), // contract address
 		Value: *eth.MustQuantity("0x00"),
 		// mul(2,3)
 		Input: *eth.MustData("0xc8a4ac9c00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003"),
