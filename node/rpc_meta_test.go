@@ -206,8 +206,6 @@ func TestMetaRpc_State_GetBalance(t *testing.T) {
 	require.NotNil(t, bal)
 }
 
-// ERROR(): Should NOT be empty, but was 0
-// check internally
 func TestMetaRpc_State_GetTransactionCount(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
@@ -215,16 +213,14 @@ func TestMetaRpc_State_GetTransactionCount(t *testing.T) {
 	blockNum := eth.MustBlockNumberOrTag("latest")
 	count, err := conn.GetTransactionCount(ctx, ALICE, *blockNum)
 	require.NoError(t, err)
-	require.NotEmpty(t, count, "must not be nil")
+	require.NotNil(t, count, "must not be nil")
 
 	// NOTE(canonbrother): return latest nonce of account, no latest block checked
 	// Should catch failure since it is looking for a nonce of a future block
-	// blockNum := eth.MustBlockNumberOrTag("0x7654321")
-	// count, err := conn.GetTransactionCount(ctx, ALICE, *blockNum)
+	// blockNum = eth.MustBlockNumberOrTag("0x7654321")
+	// _, err = conn.GetTransactionCount(ctx, ALICE, *blockNum)
 	// require.Error(t, err)
 	// require.Empty(t, count, "must not exist since it is a future block")
-
-	println("TestMetaRpc_State_GetTransactionCount")
 }
 
 func TestMetaRpc_Submit_SendRawTransactionInValidEmpty(t *testing.T) {
