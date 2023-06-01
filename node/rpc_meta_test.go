@@ -45,12 +45,6 @@ func TestMetaRpc_Block_GetBlockByNumber(t *testing.T) {
 	require.NoError(t, err, "getBlockByNumber(n) should not fail")
 }
 
-// Error():
-// n = eth_blockNumber
-// b = eth_getBlockByNumber(n)
-// b1 = eth_getBlockByHash(b.h)
-// assert(b == b1) // failed
-// b.h != b1.h // GOSH!!
 func TestMetaRpc_Block_GetBlockByHash(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
@@ -68,11 +62,10 @@ func TestMetaRpc_Block_GetBlockByHash(t *testing.T) {
 	require.Nil(t, b, "block from non-existent hash should be nil")
 	require.Equal(t, node.ErrBlockNotFound, err)
 
-	// dynamically get the block
 	blockNumber, _ := conn.BlockNumber(ctx)
 	block, err := conn.BlockByNumber(ctx, blockNumber, true)
 	require.NoError(t, err, "getBlockByNumber should be no error")
-	hash := block.Hash.Hash().String()
+	hash := (*block.Hash).String()
 	b, err = conn.BlockByHash(ctx, hash, true)
 	require.NoError(t, err, "getBlockByHash should not fail")
 	require.NotNil(t, b, "block should be retrievable by hash")
@@ -108,7 +101,6 @@ func TestMetaRpc_Client_ChainId(t *testing.T) {
 	require.Equal(t, chainId, "0x46d") // 1133
 }
 
-// ERROR(): data type size mismatch, expected 32 got 0
 func TestMetaRpc_Execute_Call(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
@@ -155,7 +147,7 @@ func TestMetaRpc_Execute_Call(t *testing.T) {
 		// 		return block.gaslimit;
 		// 	}
 		// }
-		To:    eth.MustAddress("0x966aaec51a95a737d086d21f015a6991dd5559ae"), // contract address
+		To:    eth.MustAddress("0xaaf2bfd7b8cb16fe6f719f66280bf7292763c121"), // contract address
 		Value: *eth.MustQuantity("0x00"),
 		// mul(2,3)
 		Input: *eth.MustData("0xc8a4ac9c00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003"),
