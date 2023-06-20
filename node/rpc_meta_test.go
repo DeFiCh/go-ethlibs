@@ -104,6 +104,13 @@ func TestMetaRpc_Execute_Call(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
 
+	// grab the correct contract address first
+	n, _ := conn.BlockNumber(ctx)
+	b, _ := conn.BlockByNumber(ctx, n-1, false)
+	txHash := b.Transactions[0].Hash
+	r, _ := conn.TransactionReceipt(ctx, txHash.String())
+	contractAddress := r.ContractAddress.String()
+
 	tx := eth.Transaction{
 		From: *eth.MustAddress(ALICE),
 		// pragma solidity ^0.8.2;
@@ -146,7 +153,7 @@ func TestMetaRpc_Execute_Call(t *testing.T) {
 		// 		return block.gaslimit;
 		// 	}
 		// }
-		To:    eth.MustAddress("0x966aaec51a95a737d086d21f015a6991dd5559ae"), // contract address
+		To:    eth.MustAddress(contractAddress),
 		Value: *eth.MustQuantity("0x00"),
 		// mul(2,3)
 		Input: *eth.MustData("0xc8a4ac9c00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003"),
