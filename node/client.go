@@ -360,6 +360,7 @@ func (c *client) parseBlockResponse(response *jsonrpc.RawResponse) (*eth.Block, 
 
 	block := eth.Block{}
 	err := json.Unmarshal(response.Result, &block)
+	// spew.Dump(block)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not decode block result")
 	}

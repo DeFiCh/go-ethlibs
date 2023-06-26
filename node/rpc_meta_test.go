@@ -27,50 +27,6 @@ func getMetaDevClient(t *testing.T, ctx context.Context) node.Client {
 	return conn
 }
 
-func TestMetaRpc_Block_GetBlockByNumber(t *testing.T) {
-	ctx := context.Background()
-	conn := getMetaDevClient(t, ctx)
-
-	blockNumber, err := conn.BlockNumber(ctx)
-	require.NoError(t, err)
-
-	next, err := conn.BlockByNumber(ctx, blockNumber+1000, false)
-	require.Nil(t, next, "future block should be nil")
-	require.Error(t, err, "requesting a future block should return an error")
-	require.Equal(t, node.ErrBlockNotFound, err)
-
-	// NOTE(canonbrother): getBlockByNumber(0) -> null
-	block, err := conn.BlockByNumber(ctx, blockNumber, true)
-	println("block: ", block, err)
-	require.NoError(t, err, "getBlockByNumber(n) should not fail")
-}
-
-func TestMetaRpc_Block_GetBlockByHash(t *testing.T) {
-	ctx := context.Background()
-	conn := getMetaDevClient(t, ctx)
-
-	b, err := conn.BlockByHash(ctx, "invalid", false)
-	require.Error(t, err, "requesting an invalid hash should return an error")
-	require.Nil(t, b, "block from invalid hash should be nil")
-
-	b, err = conn.BlockByHash(ctx, "0x1234", false)
-	require.Error(t, err, "requesting an invalid hash should return an error")
-	require.Nil(t, b, "block from invalid hash should be nil")
-
-	b, err = conn.BlockByHash(ctx, "0x0badf00dbadf00dbadf00dbadf00dbadf00dbadf00dbadf00dbadf00dbadf00d", false)
-	require.Error(t, err, "requesting a non-existent block should should return an error")
-	require.Nil(t, b, "block from non-existent hash should be nil")
-	require.Equal(t, node.ErrBlockNotFound, err)
-
-	blockNumber, _ := conn.BlockNumber(ctx)
-	block, err := conn.BlockByNumber(ctx, blockNumber, true)
-	require.NoError(t, err, "getBlockByNumber should be no error")
-	hash := (*block.Hash).String()
-	b, err = conn.BlockByHash(ctx, hash, true)
-	require.NoError(t, err, "getBlockByHash should not fail")
-	require.NotNil(t, b, "block should be retrievable by hash")
-}
-
 func TestMetaRpc_Client_Accounts(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
@@ -110,6 +66,7 @@ func TestMetaRpc_Execute_Call(t *testing.T) {
 	txHash := b.Transactions[0].Hash
 	r, _ := conn.TransactionReceipt(ctx, txHash.String())
 	contractAddress := r.ContractAddress.String()
+	println("contractAddress: ", contractAddress)
 
 	tx := eth.Transaction{
 		From: *eth.MustAddress(ALICE),
@@ -282,4 +239,50 @@ func TestMetaRpc_Transaction_GetTransactionByHash(t *testing.T) {
 	// tx, err = conn.TransactionByHash(ctx, "0xb0d129c0d84eef2db189f268d6510a3b24e51822c48e1a810fbd367ef8c1028c")
 	// require.NoError(t, err, "early tx should not return an error")
 	// require.NotNil(t, tx, "early tx should be retrievable by hash")
+}
+
+func TestMetaRpc_Block_GetBlockByNumber(t *testing.T) {
+	ctx := context.Background()
+	conn := getMetaDevClient(t, ctx)
+
+	blockNumber, err := conn.BlockNumber(ctx)
+	println("eth_getBlockByNumber blockNumber: ", blockNumber)
+	require.NoError(t, err)
+
+	next, err := conn.BlockByNumber(ctx, blockNumber+1000, false)
+	require.Nil(t, next, "future block should be nil")
+	require.Error(t, err, "requesting a future block should return an error")
+	require.Equal(t, node.ErrBlockNotFound, err)
+
+	// NOTE(canonbrother): getBlockByNumber(0) -> null
+	block, err := conn.BlockByNumber(ctx, blockNumber, true)
+	println("block: ", block, err)
+	require.NoError(t, err, "getBlockByNumber(n) should not fail")
+}
+
+func TestMetaRpc_Block_GetBlockByHash(t *testing.T) {
+	ctx := context.Background()
+	conn := getMetaDevClient(t, ctx)
+
+	b, err := conn.BlockByHash(ctx, "invalid", false)
+	require.Error(t, err, "requesting an invalid hash should return an error")
+	require.Nil(t, b, "block from invalid hash should be nil")
+
+	b, err = conn.BlockByHash(ctx, "0x1234", false)
+	require.Error(t, err, "requesting an invalid hash should return an error")
+	require.Nil(t, b, "block from invalid hash should be nil")
+
+	b, err = conn.BlockByHash(ctx, "0x0badf00dbadf00dbadf00dbadf00dbadf00dbadf00dbadf00dbadf00dbadf00d", false)
+	require.Error(t, err, "requesting a non-existent block should should return an error")
+	require.Nil(t, b, "block from non-existent hash should be nil")
+	require.Equal(t, node.ErrBlockNotFound, err)
+
+	blockNumber, _ := conn.BlockNumber(ctx)
+	println("eth_getBlockByHash blockNumber: ", blockNumber)
+	block, err := conn.BlockByNumber(ctx, blockNumber, true)
+	require.NoError(t, err, "getBlockByNumber should be no error")
+	hash := (*block.Hash).String()
+	b, err = conn.BlockByHash(ctx, hash, true)
+	require.NoError(t, err, "getBlockByHash should not fail")
+	require.NotNil(t, b, "block should be retrievable by hash")
 }
