@@ -252,9 +252,11 @@ func TestMetaRpc_Block_GetBlockByNumber(t *testing.T) {
 	next, err := conn.BlockByNumber(ctx, blockNumber+1000, false)
 	require.Nil(t, next, "future block should be nil")
 	require.Error(t, err, "requesting a future block should return an error")
-	require.Equal(t, node.ErrBlockNotFound, err)
+	// NOTE(canonbrother): refer to new custom error message
+	// https://github.com/DeFiCh/ain/pull/2120
+	// require.Equal(t, node.ErrBlockNotFound, err)
+	require.Error(t, err, "Custom error: header not found")
 
-	// NOTE(canonbrother): getBlockByNumber(0) -> null
 	block, err := conn.BlockByNumber(ctx, blockNumber, true)
 	println("block: ", block, err)
 	require.NoError(t, err, "getBlockByNumber(n) should not fail")

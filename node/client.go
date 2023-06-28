@@ -13,6 +13,11 @@ import (
 	"github.com/INFURA/go-ethlibs/jsonrpc"
 )
 
+type RpcError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 var (
 	ErrBlockNotFound       = errors.New("block not found")
 	ErrTransactionNotFound = errors.New("transaction not found")
@@ -349,7 +354,9 @@ func (c *client) BlockByHash(ctx context.Context, hash string, full bool) (*eth.
 
 func (c *client) parseBlockResponse(response *jsonrpc.RawResponse) (*eth.Block, error) {
 	if response.Error != nil {
-		return nil, errors.New(string(*response.Error))
+		rpcError := &RpcError{}
+		_ = json.Unmarshal(*response.Error, rpcError)
+		return nil, errors.Errorf("%s", rpcError.Message)
 	}
 
 	if len(response.Result) == 0 || bytes.Equal(response.Result, json.RawMessage(`null`)) {
