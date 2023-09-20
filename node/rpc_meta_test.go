@@ -65,7 +65,9 @@ func TestMetaRpc_Execute_Call(t *testing.T) {
 	n, _ := conn.BlockNumber(ctx)
 	b, _ := conn.BlockByNumber(ctx, n-1, false)
 	txHash := b.Transactions[0].Hash
-	r, _ := conn.TransactionReceipt(ctx, txHash.String())
+	r, err := conn.TransactionReceipt(ctx, txHash.String())
+	// spew.Dump(r)
+	require.NoError(t, err)
 	contractAddress := r.ContractAddress.String()
 	println("contractAddress: ", contractAddress)
 
@@ -118,7 +120,7 @@ func TestMetaRpc_Execute_Call(t *testing.T) {
 	}
 
 	hash, err := conn.Call(ctx, tx, *eth.MustBlockNumberOrTag("latest"))
-	println("hash: ", hash, err)
+	// println("hash: ", hash, err)
 	require.NoError(t, err)
 	require.Equal(t, hash, "0x0000000000000000000000000000000000000000000000000000000000000006")
 }
@@ -252,7 +254,7 @@ func TestMetaRpc_Block_GetBlockByNumber(t *testing.T) {
 	conn := getMetaDevClient(t, ctx)
 
 	blockNumber, err := conn.BlockNumber(ctx)
-	println("eth_getBlockByNumber blockNumber: ", blockNumber)
+	// println("eth_getBlockByNumber blockNumber: ", blockNumber)
 	require.NoError(t, err)
 
 	next, err := conn.BlockByNumber(ctx, blockNumber+1000, false)
@@ -287,7 +289,7 @@ func TestMetaRpc_Block_GetBlockByHash(t *testing.T) {
 	require.Equal(t, node.ErrBlockNotFound, err)
 
 	blockNumber, _ := conn.BlockNumber(ctx)
-	println("eth_getBlockByHash blockNumber: ", blockNumber)
+	// println("eth_getBlockByHash blockNumber: ", blockNumber)
 	block, err := conn.BlockByNumber(ctx, blockNumber, true)
 	require.NoError(t, err, "getBlockByNumber should be no error")
 	hash := (*block.Hash).String()
