@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/require"
 
 	"github.com/INFURA/go-ethlibs/eth"
@@ -62,15 +61,16 @@ func TestMetaRpc_Execute_Call(t *testing.T) {
 	ctx := context.Background()
 	conn := getMetaDevClient(t, ctx)
 
-	// grab the correct contract address first
-	n, _ := conn.BlockNumber(ctx)
-	b, _ := conn.BlockByNumber(ctx, n-1, false)
-	txHash := b.Transactions[0].Hash
-	r, err := conn.TransactionReceipt(ctx, txHash.String())
-	spew.Dump(r)
-	require.NoError(t, err)
-	contractAddress := r.ContractAddress.String()
-	println("contractAddress: ", contractAddress)
+	// // grab the correct contract address first
+	// n, _ := conn.BlockNumber(ctx)
+	// b, _ := conn.BlockByNumber(ctx, n-1, false)
+	// txHash := b.Transactions[0].Hash
+	// r, err := conn.TransactionReceipt(ctx, txHash.String())
+	// // spew.Dump(r)
+	// require.NoError(t, err)
+	// contractAddress := r.ContractAddress.String()
+	// println("contractAddress: ", contractAddress)
+	contractAddress := "0x360aED768C2af5d50fB9F9EFbd9D4447d335cE8b"
 
 	tx := eth.Transaction{
 		From: *eth.MustAddress(ALICE),
