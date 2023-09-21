@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/require"
 
 	"github.com/INFURA/go-ethlibs/eth"
@@ -66,7 +67,7 @@ func TestMetaRpc_Execute_Call(t *testing.T) {
 	b, _ := conn.BlockByNumber(ctx, n-1, false)
 	txHash := b.Transactions[0].Hash
 	r, err := conn.TransactionReceipt(ctx, txHash.String())
-	// spew.Dump(r)
+	spew.Dump(r)
 	require.NoError(t, err)
 	contractAddress := r.ContractAddress.String()
 	println("contractAddress: ", contractAddress)
